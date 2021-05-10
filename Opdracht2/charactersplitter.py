@@ -42,7 +42,7 @@ def addto_occurences_dic(cutted_sentence):
         occurencesdic[first_character][0][second_character] += 1
     return occurencesdic
 
-
+'''Extra Step: Run the functions'''
 for aliceline in aliceLines:
     valid_sentence = remover(aliceline)
     cutted_sentence = sentence_cutter(valid_sentence)
@@ -53,3 +53,11 @@ valid_sentence = remover(sentence)
 cutted_sentence = sentence_cutter(valid_sentence)
 occurencesdic = addto_occurences_dic(cutted_sentence)
 print("After Manual Text: ", occurencesdic)
+
+'''Step 6: Percent of times that a certain '''
+for i in 'abcdefghijklmnopqrstuvwxyz $':
+        tot = sum(list(occurencesdic[i][0].values()))
+        for j in 'abcdefghijklmnopqrstuvwxyz $':
+            if tot > 0 and occurencesdic[i][0][j] > 0:
+                occurencesdic[i][0][j] = round((occurencesdic[i][0][j]/tot)*100, 1)
+print("Percentage Occurences: ", occurencesdic)
