@@ -1,5 +1,7 @@
 import copy
 from deepdiff import DeepDiff
+'''Code buddy: Quinn de Groot'''
+
 '''Step 1: create the big occurences dic'''
 def occurenceslist_creator():
     alfabet = 'abcdefghijklmnopqrstuvwxyz $'
@@ -49,13 +51,15 @@ def add_sentence_to_matrix(sentence, matrixdic):
 '''Step 4.1: retrieve traindata for English and Dutch'''
 alicefile = open('alice.txt', 'r')
 engLines1 = alicefile.readlines()
-quicksandsfile = open('quicksands.txt', 'r')
-engLines2 = quicksandsfile.readlines()
+forestfile = open('forest.txt', 'r')
+engLines2 = forestfile.readlines()
 
 oorlogfile = open('oorlogverhaal.txt', 'r')
 nlLines1 = oorlogfile.readlines()
 wijenonsezeltjefile = open('wijenonsezeltje.txt', 'r')
 nlLines2 = wijenonsezeltjefile.readlines()
+kabouterfile = open('kabouter.txt', 'r', encoding="utf8")
+nlLines3 = kabouterfile.readlines()
 
 '''Step 4.2: run every lines, make them valid and insert it into the matrix'''
 for engLine1 in engLines1:
@@ -64,12 +68,14 @@ for engLine1 in engLines1:
 for engLine2 in engLines2:
     engdic = add_sentence_to_matrix(engLine2, engdic)
 
-
 for nlLine1 in nlLines1:
     nldic = add_sentence_to_matrix(nlLine1, nldic)
 
 for nlLine2 in nlLines2:
     nldic = add_sentence_to_matrix(nlLine2, nldic)
+
+for nlLine3 in nlLines3:
+    nldic = add_sentence_to_matrix(nlLine3, nldic)
 
 '''Step 4.3: convert both matrixes to percentage'''
 for i in 'abcdefghijklmnopqrstuvwxyz $':
@@ -91,19 +97,49 @@ print("Dutch Percentage Occurences: ", nldic)
 testdata = open('../Opdracht2/sentences.nl-en.txt', 'r', encoding="utf8")
 testlines = testdata.readlines()
 
-'''Step 5.2: receive matrix'''
+'''Step 5.2: create score function'''
+def scoring(testmatrix):
+    enscore = 0
+    nlscore = 0
+    for i in 'abcdefghijklmnopqrstuvwxyz $':
+        for j in 'abcdefghijklmnopqrstuvwxyz $':
+            if testmatrix[i][0][j] != 0:
+                endiff = abs(testmatrix[i][0][j]-engdic[i][0][j])
+                nldiff = abs(testmatrix[i][0][j]-nldic[i][0][j])
+                if endiff>nldiff:
+                    nlscore+=1
+                else:
+                    enscore+=1
+    if nlscore>enscore:
+        return 'en'
+    else:
+        return 'nl'
+
+'''Step 5.3: Loop through every testline and use scoring() to calculate which dictionary is closer'''
 amount = 0
+nlcount = 0
+engcount = 0
 for testline in testlines:
+
     amount += 1
     testdatamatrix = copy.deepcopy(occurencesdic)
     testdatamatrix = add_sentence_to_matrix(testline, testdatamatrix)
-    # print(testdatamatrix)
-
-for i in 'abcdefghijklmnopqrstuvwxyz $':
+    for i in 'abcdefghijklmnopqrstuvwxyz $':
         tot = sum(list(nldic[i][0].values()))
         for j in 'abcdefghijklmnopqrstuvwxyz $':
             if tot > 0 and nldic[i][0][j] > 0:
-                testdatamatrix[i][0][j] = round((testdatamatrix[i][0][j]/tot)*100, 1)
+                testdatamatrix[i][0][j] = round((testdatamatrix[i][0][j] / tot) * 100, 1)
 
-print("Sentence ", amount, ": ", testline, "\n", testdatamatrix)
-print(DeepDiff(testdatamatrix, nldic, significant_digits=1, ignore_string_case=True))
+    score = scoring(testdatamatrix)
+    if score == "nl":
+        nlcount += 1
+    else:
+        engcount += 1
+    print("Sentence ", amount, ": '''", testline, "''' Estimated Language: ", score)
+
+print("\nThis test data contains:\nNL sentences: ", nlcount, " ENG sentences: ", engcount)
+
+
+
+
+
