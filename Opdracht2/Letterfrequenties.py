@@ -1,7 +1,10 @@
 import copy
-from deepdiff import DeepDiff
+import time
+from functools import reduce
+from operator import getitem
 '''Code buddy: Quinn de Groot'''
 
+start_time = time.time()
 '''Step 1: create the big occurences dic'''
 def occurenceslist_creator():
     alfabet = 'abcdefghijklmnopqrstuvwxyz $'
@@ -22,11 +25,9 @@ def add_sentence_to_matrix(sentence, matrixdic):
     '''Step 3.1: replace any unvalid value with a invalid sign'''
     def remover(sentence =""): #source: https://stackoverflow.com/questions/55902042/python-keep-only-alphanumeric-and-space-and-ignore-non-ascii/55902074
       valid_values = list("abcdefghijklmnopqrstuvwxyz ")
-      captilized_values = list("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+      sentence = sentence.lower()
       for item in sentence:
-        if item in captilized_values:
-          sentence = sentence.replace(item, item.lower())
-        elif item not in valid_values:
+        if item not in valid_values:
           sentence = sentence.replace(item, "$")
       return sentence
     removed_sentence = remover(sentence)
@@ -43,6 +44,7 @@ def add_sentence_to_matrix(sentence, matrixdic):
             first_character = cutted_characters[0]
             second_character = cutted_characters[1]
             matrixdic[first_character][0][second_character] += 1
+
         return matrixdic
     matrixdic = addto_occurences_dic(cutted_sentence, matrixdic)
     return matrixdic
@@ -61,7 +63,7 @@ nlLines2 = wijenonsezeltjefile.readlines()
 kabouterfile = open('kabouter.txt', 'r', encoding="utf8")
 nlLines3 = kabouterfile.readlines()
 
-'''Step 4.2: run every lines, make them valid and insert it into the matrix'''
+'''Step 4.2: run every line, make them valid and insert it into the matrix'''
 for engLine1 in engLines1:
     engdic = add_sentence_to_matrix(engLine1, engdic)
 
@@ -92,6 +94,7 @@ for i in 'abcdefghijklmnopqrstuvwxyz $':
                 nldic[i][0][j] = round((nldic[i][0][j]/tot)*100, 1)
 print("Dutch Percentage Occurences: ", nldic)
 
+traindata_exectime = time.time() - start_time
 '''Step 5: get the estimatations from the test data'''
 '''Step 5.1: retrieve testdata for English and Dutch'''
 testdata = open('../Opdracht2/sentences.nl-en.txt', 'r', encoding="utf8")
@@ -138,7 +141,7 @@ for testline in testlines:
     print("Sentence ", amount, ": '''", testline, "''' Estimated Language: ", score)
 
 print("\nThis test data contains:\nNL sentences: ", nlcount, " ENG sentences: ", engcount)
-
+print("Train Data Time:--- ",traindata_exectime, " seconds ---\nTest Data Time:--- ", (time.time() - start_time)-traindata_exectime," seconds ---\nTotal Time:--- ",(time.time() - start_time), "seconds ---")
 
 
 
