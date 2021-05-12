@@ -38,11 +38,12 @@ def add_sentence_to_matrix(sentence, matrixdic):
     '''Step 3.3: Add the occurences of the cutted sentence to the big occurences dictionary'''
     def addto_occurences_dic(cutted_sentence, matrixdic):
         for cutted_characters in cutted_sentence:
-
             "Reduce method:"
             mapList = [cutted_characters[0], cutted_characters[1]]
-            currentvalue = matrixdic[cutted_characters[0]][cutted_characters[1]]
-            reduce(getitem, mapList[:-1], matrixdic) [mapList[-1]] = currentvalue + 1
+            # nextvalue = matrixdic[cutted_characters[0]][cutted_characters[1]] + 1
+
+            #set reduce                                                 get reduce
+            reduce(getitem, mapList[:-1], matrixdic) [mapList[-1]] = reduce(getitem, mapList, matrixdic) + 1
 
             "Non reduce method:"
             # first_character = cutted_characters[0]
@@ -50,6 +51,7 @@ def add_sentence_to_matrix(sentence, matrixdic):
             # matrixdic[first_character][second_character] += 1
 
         return matrixdic
+
     matrixdic = addto_occurences_dic(cutted_sentence, matrixdic)
     return matrixdic
 
@@ -83,25 +85,26 @@ for nlLine2 in nlLines2:
 for nlLine3 in nlLines3:
     nldic = add_sentence_to_matrix(nlLine3, nldic)
 
-'''Step 4.3: convert both matrixes to percentage'''
-for i in 'abcdefghijklmnopqrstuvwxyz $':
-        tot = sum(list(engdic[i].values()))
+'''Step 4.3: create percentage converter function'''
+def percentage_matrix_converter(dictionary):
+    for i in 'abcdefghijklmnopqrstuvwxyz $':
+        tot = sum(list(dictionary[i].values()))
         for j in 'abcdefghijklmnopqrstuvwxyz $':
-            if tot > 0 and engdic[i][j] > 0:
-                engdic[i][j] = round((engdic[i][j]/tot)*100, 1)
+            if tot > 0 and dictionary[i][j] > 0:
+                dictionary[i][j] = round((dictionary[i][j] / tot) * 100, 1)
+    return dictionary
+
+'''Step 4.4: convert both matrixes to percentage'''
+engdic = percentage_matrix_converter(engdic)
 print("English Percentage Occurences: ", engdic)
 
-for i in 'abcdefghijklmnopqrstuvwxyz $':
-        tot = sum(list(nldic[i].values()))
-        for j in 'abcdefghijklmnopqrstuvwxyz $':
-            if tot > 0 and nldic[i][j] > 0:
-                nldic[i][j] = round((nldic[i][j]/tot)*100, 1)
+nldic = percentage_matrix_converter(nldic)
 print("Dutch Percentage Occurences: ", nldic)
 
 traindata_exectime = time.time() - start_time
 '''Step 5: get the estimatations from the test data'''
 '''Step 5.1: retrieve testdata for English and Dutch'''
-testdata = open('../Opdracht2/sentences.nl-en.txt', 'r', encoding="utf8")
+testdata = open('sentences.nl-en.txt', 'r', encoding="utf8")
 testlines = testdata.readlines()
 
 '''Step 5.2: create score function'''
@@ -136,6 +139,7 @@ for testline in testlines:
         for j in 'abcdefghijklmnopqrstuvwxyz $':
             if tot > 0 and nldic[i][j] > 0:
                 testdatamatrix[i][j] = round((testdatamatrix[i][j] / tot) * 100, 1)
+
 
     score = scoring(testdatamatrix)
     if score == "nl":
