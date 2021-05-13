@@ -1,5 +1,4 @@
 # Opdracht: Letterfrequenties
-> Herkent Of De Regel Engels Of Nederlands is
 > Recognize Whether De Sentence Is English Or Dutch
 
 One to two paragraph statement about your product and what it does.
