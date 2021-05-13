@@ -20,13 +20,16 @@ py"
 To use it:
 - Download the entire code as ZIP or clone it
 - Put your text file in it (I use [test.txt](https://github.com/GameModes/DIP/blob/main/Opdracht2/test.txt))
-- Use the Usage command with the your used OS system  
+- Use the Usage command with the your used OS system
+  
 This will give the amount of counted English and Dutch Sentences  
 Since my test files was containing only english sentences this would be output:  
 ![](smalltextOutput.png)
 
 To really test out the code, lets use a bigger Text file.
 [This Text File](https://github.com/GameModes/DIP/blob/main/Opdracht2/sentences.nl-en.txt) contains 73 Dutch and 119 Engels Sentences.
+Running this will give the following output:  
+![](bigtextOutput.png)
 
 _For more examples and usage, please refer to the [Wiki][wiki]._
 
