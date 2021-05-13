@@ -1,5 +1,5 @@
 # Opdracht: Letterfrequenties
-> Recognize Whether De Sentence Is English Or Dutch With An Accuracy Score Of At Least 90%
+> Recognize Whether The Sentence Is English Or Dutch With An Accuracy Score Of At Least 90%
 
 ## Usage Command
 
