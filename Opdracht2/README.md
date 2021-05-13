@@ -24,9 +24,9 @@ py"
 To use it:
 - Download the entire code as ZIP or clone it
 - Put your text file in it (I use test.txt)
-- Use the Usage command with the your used OS system
-This will give the amount of counted English and Dutch Sentences
-Since my test files was containing only english sentences this would be output:
+- Use the Usage command with the your used OS system  
+This will give the amount of counted English and Dutch Sentences  
+Since my test files was containing only english sentences this would be output:  
 ![](smalltextOutput.png)
 
 
