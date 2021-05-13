@@ -20,21 +20,19 @@ py"
 To use it:
 - Download the entire code as ZIP or clone it
 - Put your text file in it (I use [test.txt](https://github.com/GameModes/DIP/blob/main/Opdracht2/test.txt))
-- Use the Usage command with the your used OS system
+- Use the Usage command For your OS system
   
 This will give the amount of counted English and Dutch Sentences  
-Since my test files was containing only english sentences this would be output:  
+Since my test files was containing only english sentences this would be the output:  
 ![](smalltextOutput.png)
 
 To really test out the code, lets use a bigger Text file.
 [This Text File](https://github.com/GameModes/DIP/blob/main/Opdracht2/sentences.nl-en.txt) contains 73 Dutch and 119 Engels Sentences.
 Running this will give the following output:  
 ![](bigtextOutput.png)
-
-_For more examples and usage, please refer to the [Wiki][wiki]._
+It might not be correct, but it's accuracy is still higher than 90%.
 
 ## Library Install
-
 Describe how to install all the Libraries
 
 OS X & Linux:
@@ -54,11 +52,9 @@ Quinn de Groot:
 [https://github.com/DragonKiller952](github)
 
 
+## Code Explaination
+4 files are used in the following order:
+mapper.py -> reducer.py -> mapper2.py -> reducer2.py
+### mapper.py
+- test
 
-<!-- Markdown link & img dfn's -->
-[npm-image]: https://img.shields.io/npm/v/datadog-metrics.svg?style=flat-square
-[npm-url]: https://npmjs.org/package/datadog-metrics
-[npm-downloads]: https://img.shields.io/npm/dm/datadog-metrics.svg?style=flat-square
-[travis-image]: https://img.shields.io/travis/dbader/node-datadog-metrics/master.svg?style=flat-square
-[travis-url]: https://travis-ci.org/dbader/node-datadog-metrics
-[wiki]: https://github.com/yourname/yourproject/wiki
