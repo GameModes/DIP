@@ -65,13 +65,23 @@ mapper.py -> reducer.py -> mapper2.py -> reducer2.py
 - Prints all the characters
 
 ### reducer.py
-- Reads text file with sys(.stdin)
+- Reads print from mapper.py with sys(.stdin) using the pipline
 - Splits it into sentences
 - Create an empty matrix containg all possible characters (it would look something like this: (a{a:0, b:0, c:0 etc..},b{a:0, b:0, c:0 etc..}, c{a:0, b:0, c:0 etc..}) )
 - Add every character from mapper.py to the empty matrix using the function: add_to_matrix()
 - Converts the entire matrix until percentages (a{a:2, b:5, c:3} -> a{a:20, b:50, c:30} so 20% change for aa)
 - Prints this matrix
 
+### mapper2.py
+- As train data I have used 3 Dutch stories and 2 English Stories and convert them each into their own Matrix which are mentioned under the import
+- Reads print from reducer.py with sys(.stdin) using the pipline
+- Splits it into sentences
+- While printed in reducer.py the matrix became a string so I convert to list again with eval()
+- The nested for loop will calculate which matrix (eng or dutch) is closer to the testmatrix and the one with the lowest diff will give a string output "nl" or "en"
+- And prints it
 
-
+### reducer2.py (Used in wordcount assignment)
+- Reads print from mapper2.py with sys(.stdin) using the pipline
+- counts every output given by mapper2.py
+- prints for every string given (in this case only "en" and "nl") the amount of occurences it has been given by mapper2.py
 
