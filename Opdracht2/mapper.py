@@ -12,12 +12,11 @@ def invalid_values_replacer(line):
 
 # input comes from STDIN (standard input)
 for line in sys.stdin:
-    orgline = copy.copy(line)
     line = line.strip() # split the line into words
     line = line.lower() # lower capitalized letters
     line = invalid_values_replacer(line)
     line = [line[item:item + 2]for item in range(len(line)-1)]
     line = map(lambda x: (x, 1), line)
-    print ('%s\t%s' % (list(line), orgline))
+    print('%s\t' % (list(line)))
 
 
