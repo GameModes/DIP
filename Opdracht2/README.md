@@ -6,7 +6,7 @@
 OS X & Linux:
 
 ```sh
-cat testtext.txt | hadopy --mapper "python hadoop/mapper1.py" --reducer "python hadoop/reducer1.py" | hadopy --mapper "python hadoop/mapper2.py" --reducer "python hadoop/reducer2.py"
+cat testtext.txt | hadopy --mapper "python mapper.py" --reducer "python reducer1.py" | hadopy --mapper "python mapper2.py" --reducer "python reducer2.py"
 ```
 
 Windows:
