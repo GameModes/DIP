@@ -1,7 +1,4 @@
-import copy
-import re
 import sys
-
 
 def invalid_values_replacer(line):
     valid_values = list("abcdefghijklmnopqrstuvwxyz ")

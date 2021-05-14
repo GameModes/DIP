@@ -1,7 +1,5 @@
 import copy
-import time
 from functools import reduce
-from operator import getitem
 '''Code buddy: Quinn de Groot'''
 
 def turn_lines_into_characters(lines):
