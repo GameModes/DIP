@@ -14,7 +14,7 @@ class Computer:
 
     def DeliverMessage(self, m):
         """
-        A message given from Simulation
+        A message given from Simulation(n_p, n_a, tmax, E)
         :param m: Message
         """
         #         print('im gonna deliver')
@@ -137,7 +137,7 @@ class Network:
         return None
 
 
-def Simulate(n_p, n_a, tmax, E):
+def Simulation(n_p, n_a, tmax, E):
     #   /* Initializeer Proposer and Acceptor sets, maak netwerk aan*/
     N = Network()
     A = {'A' + str((i + 1)): Computer('A' + str((i + 1)), N) for i in range(n_a)}
@@ -226,42 +226,46 @@ def Simulate(n_p, n_a, tmax, E):
 
 
 def main(file):
+    """
+    Reads the file, splits first line and the rest.
+    The first line is being splitted into proposers, acceptors and the maximum ticks
+    The rest is being used in a for loop where each line is a executeLine.
+
+    :param file: the text file with commands
+    """
     file = open(file, 'r')
     file = file.read().splitlines()
 
-    start = file[0].split(' ')
-    file = file[1:-1]
-    n_p = int(start[0])
-    n_a = int(start[1])
-    tmax = int(start[2])
-    #     print(file)
+    firstLine = file[0].split(' ')
+    n_p, n_a, tmax= firstLine
+    n_p, n_a, tmax = int(n_p), int(n_a), int(tmax)
+
     E = []
+    current_e = None #current event
+    executeLines = file[1:-1]
+    for executeLine in executeLines:
+        executeLine = executeLine.split(' ') #to split every word in line
+        executeLine[0] = int(executeLine[0]) #convert the tick of the line from a string to an integer
+        if current_e == None: #this will be executed only the first time
+            current_e = [executeLine[0], [], [], None, None] #create empty template with tick as first element
+        if executeLine[0] != current_e[0]:#this will be executed only NOT the first time
+            E.append(current_e) #to save the formerly event in list E
+            current_e = [executeLine[0], [], [], None, None] #create empty template with tick as first element
 
-    current = None
-    for i in file:
-        i = i.split(' ')
-        if current == None:
-            current = [int(i[0]), [], [], None, None]
-        if int(i[0]) != current[0]:
-            E.append(current)
-            current = [int(i[0]), [], [], None, None]
-
-        if 'FAIL' in i:
-            if 'PROPOSER' in i:
-                current[1].append('P{}'.format(i[-1]))
-            else:
-                current[1].append('A{}'.format(i[-1]))
-        elif 'RECOVER' in i:
-            if 'PROPOSER' in i:
-                current[2].append('P{}'.format(i[-1]))
-            else:
-                current[2].append('A{}'.format(i[-1]))
-        elif 'PROPOSE' in i:
-            current[3] = 'P' + i[-2]
-            current[4] = int(i[-1])
-    E.append(current)
-    #     print(E)
-
-    Simulate(n_p, n_a, tmax, E)
+        if 'FAIL' in executeLine:
+            if 'PROPOSER' in executeLine: #so the line is FAIL PROPOSER
+                current_e[1].append('P{}'.format(executeLine[-1])) #adds failing proposer to second element of current E aka F
+            else: #so the line is FAIL ACCEPTOR
+                current_e[1].append('A{}'.format(executeLine[-1])) #adds failing acceptor to second element of current E aka F
+        elif 'RECOVER' in executeLine:
+            if 'PROPOSER' in executeLine: #so the line is RECOVER PROPOSER
+                current_e[2].append('P{}'.format(executeLine[-1])) #adds recovering proposer to third element of current E aka R
+            else:#so the line is RECOVER ACCEPTOR
+                current_e[2].append('A{}'.format(executeLine[-1])) #adds recovering acceptor to third element of current E aka R
+        elif 'PROPOSE' in executeLine:#so the line is PROPOSE
+            current_e[3] = 'P' + executeLine[-2] #add proposer to 4th element of current E aka msg_p
+            current_e[4] = int(executeLine[-1]) #add value to 5th/last element of current E aka msg_v
+    E.append(current_e) #to add the last one to E
+    Simulation(n_p, n_a, tmax, E) #runs simulation with the input, firstline and all the Events in E
 
 main('testinputPaxos1.txt')
