@@ -1,30 +1,24 @@
+# Code by Quinn de Groot, Ruben van Raaij and Guy Veenhof
+
 class Computer:  # Machines performing a simulation to receive consensus, and learn new data
     def __init__(self, net, acc=None, lea=None):
-        self.failed = False #if failed the computer is unusable. Default is Not Failed
-        self.network = net #Connects the computer to the network
-        self.acceptors = acc #Knows the acceptors to send a message to
-        self.learners = lea #Knows the learners to send succes messages to
-        self.prior = False #Tells if the computer has priority of sending a message. Default is False
-        self.changed = False #Tells if the computer has changed during the simulation. Default is false
-        self.accepted = 0 #Tells the amount of accepted messages. Default is 0
-        self.rejected = 0 #Tells the amount of rejected messages. Default is 0
-        self.promise = 0 #Tells the amount of promised messagees. Default is 0
-        self.consensus = False #?
-        self.initval = None #?
-        self.value = None #Tells the value it holds if it needs to send a messag
-        self.maxID = 0 #?
-        self.matrices = None #?
-        self.predicted = 0 #?
+        self.failed = False  # If failed the computer is unusable. Default is Not Failed (proposers & acceptors)
+        self.network = net  # Connects the computer to the network for messages it sends (all)
+        self.acceptors = acc  # Knows the acceptor ID's to send a messages to (proposers)
+        self.learners = lea  # Knows the learner ID's to send success messages to (proposers)
+        self.prior = False  # Tells if the computer has priority of sending a message. Default is False (acceptors)
+        self.changed = False  # Tells if the computer has changed during the simulation. Default is False (proposers)
+        self.accepted = 0  # Tells the amount of accepted messages received. Default is 0 (proposers)
+        self.rejected = 0  # Tells the amount of rejected messages received. Default is 0 (proposers)
+        self.promise = 0  # Tells the amount of promised messages received. Default is 0 (proposers)
+        self.consensus = False  # Tells if the consensus was reached in the current round. Default is False (proposers)
+        self.initval = None  # Tells the value the proposal request started with (proposers)
+        self.value = None  # Tells the current value it holds if it needs to send a message (proposers & acceptors)
+        self.maxID = 0  # Tells the highest proposal request ID it has seen this round (acceptor)
+        self.matrices = None  # Tells the current matrices it holds (learner)
+        self.predicted = 0  # Tells how many total values are saved in matrices (learner)
 
     def DeliverMessage(self, m):  # Performs an action based on the message type
-        """
-        Sends a Prepare message type to all acceptor with the Message() function during the Propose type of the Message
-        Else if during the Prepare type of the message, send a promise message.
-        Else if Promise message, send accept
-        Else if Accept message, send reject or accepted depending on the ID used.
-        Else determines if proposal is successful
-        :param m: The Message that needs to be sended
-        """
         global proposal
         if m.type == 'PROPOSE':  # Proposer sends a prepare message to all acceptors
             proposal += 1
