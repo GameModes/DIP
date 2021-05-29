@@ -1,62 +1,62 @@
-class Computer:
-    def __init__(self, id, net, acc=None):
-        self.id = id
+class Computer:  # Machines performing a simulation to receive consensus
+    def __init__(self, net, acc=None):
         self.failed = False
         self.network = net
         self.acceptors = acc
         self.prior = False
+        self.changed = False
         self.accepted = 0
         self.rejected = 0
+        self.promise = 0
         self.consensus = False
         self.initval = 0
-        self.maxval = 0
+        self.value = 0
         self.maxID = 0
 
-    def DeliverMessage(self, m):
-        """
-        A message given from Simulation(n_p, n_a, tmax, E)
-        :param m: Message
-        """
-        #         print('im gonna deliver')
+    def DeliverMessage(self, m):  # Performs an action based on the message type
         global proposal
-        if m.type == 'PROPOSE':
-            proposal +=1
+        if m.type == 'PROPOSE':  # Proposer sends a prepare message to all acceptors
+            proposal += 1
             self.initval = m.value
-            self.maxval = m.value
-            for i in self.acceptors.keys():
+            self.value = m.value
+            for acceptor in self.acceptors:
                 mn = Message()
                 mn.type = 'PREPARE'
                 mn.src = m.dst
-                mn.dst = i
+                mn.dst = acceptor
                 mn.value = m.value
                 mn.proposalID = proposal
                 self.network.Queue_Message(mn)
 
-        elif m.type == 'PREPARE':
-            if self.maxval < m.value:
-                self.maxval = m.value
+        elif m.type == 'PREPARE':  # Acceptors send a Promise message to source proposer
             mn = Message()
             mn.type = 'PROMISE'
             mn.src = m.dst
             mn.dst = m.src
-            mn.value = self.maxval
+            if self.prior:  # If there was prior data, change the current message data to that
+                mn.value = self.value
+            else:
+                mn.value = m.value
             mn.proposalID = m.proposalID
             self.network.Queue_Message(mn)
-        elif m.type == 'PROMISE':
-            if self.maxval < m.value:
-                self.maxval = m.value
-            mn = Message()
-            mn.type = 'ACCEPT'
-            mn.src = m.dst
-            mn.dst = m.src
-            mn.value = m.value
-            mn.proposalID = m.proposalID
-            #             print(mn.type, mn.src, mn.dst, mn.value)
-
-            self.network.Queue_Message(mn)
-        elif m.type == 'ACCEPT':
-            if self.prior:
-                if m.proposalID < self.maxID:
+        elif m.type == 'PROMISE':  # Proposer sends a accept messages to all acceptors
+            self.promise += 1
+            # If the message value is different and the first different, change own value
+            if self.value != m.value and not self.changed:
+                self.value = m.value
+                self.changed = True
+            if self.promise == len(self.acceptors):  # If all messages received, send messages with own value
+                for acceptor in self.acceptors:
+                    mn = Message()
+                    mn.type = 'ACCEPT'
+                    mn.src = m.dst
+                    mn.dst = acceptor
+                    mn.value = self.value
+                    mn.proposalID = m.proposalID
+                    self.network.Queue_Message(mn)
+        elif m.type == 'ACCEPT':  # Acceptor sends an accepted or rejected message to source proposer
+            if self.prior:  # If there is prior data, check request
+                if m.proposalID < self.maxID:  # If request is outdated, reject request
                     mn = Message()
                     mn.type = 'REJECTED'
                     mn.src = m.dst
@@ -64,8 +64,9 @@ class Computer:
                     mn.value = m.value
                     mn.proposalID = m.proposalID
                     self.network.Queue_Message(mn)
-                else:
+                else:  # If request is not outdated, accept request
                     self.maxID = m.proposalID
+                    self.value = m.value
                     mn = Message()
                     mn.type = 'ACCEPTED'
                     mn.src = m.dst
@@ -73,9 +74,10 @@ class Computer:
                     mn.value = m.value
                     mn.proposalID = m.proposalID
                     self.network.Queue_Message(mn)
-            else:
+            else:  # If there is no prior data, save current data and accept proposal
                 self.prior = True
                 self.maxID = m.proposalID
+                self.value = m.value
                 mn = Message()
                 mn.type = 'ACCEPTED'
                 mn.src = m.dst
@@ -83,30 +85,36 @@ class Computer:
                 mn.value = m.value
                 mn.proposalID = m.proposalID
                 self.network.Queue_Message(mn)
-        else:
-            if m.type == 'ACCEPTED':
+        else:  # Proposer receives accepted or rejected messages, and determines if proposal is successful
+            if m.type == 'ACCEPTED':  # Save response from acceptors
                 self.accepted += 1
             else:
                 self.rejected += 1
-            if self.accepted + self.rejected == len(self.acceptors.keys()):
-                if self.accepted > self.rejected:
-                    self.consensus = True
-                else:
+            if self.accepted + self.rejected == len(self.acceptors):  # If all received, determine if successful
+                if self.accepted > self.rejected:  # If more accepted, reset values from this run and change consensus
                     self.accepted = 0
                     self.rejected = 0
+                    self.changed = False
+                    self.promise = 0
+                    self.consensus = True
+                else:  # If more rejected, reset values from this run and send new prepare messages
+                    self.accepted = 0
+                    self.rejected = 0
+                    self.changed = False
+                    self.promise = 0
                     proposal += 1
-                    self.maxval = m.value
-                    for i in self.acceptors.keys():
+                    self.value = m.value
+                    for acceptor in self.acceptors:
                         mn = Message()
                         mn.type = 'PREPARE'
                         mn.src = m.dst
-                        mn.dst = i
+                        mn.dst = acceptor
                         mn.value = m.value
                         mn.proposalID = proposal
                         self.network.Queue_Message(mn)
 
 
-class Message:
+class Message:  # Message sent between computers or the simulation
     def __init__(self):
         self.src = None
         self.dst = None
@@ -115,113 +123,96 @@ class Message:
         self.proposalID = None
 
 
-class Network:
+class Network:  # Container containing messages from computers
     def __init__(self):
         self.queue = []
-        self.proposers = None
-        self.acceptors = None
+        self.computers = None
 
-    def Queue_Message(self, m):
+    def Queue_Message(self, m):  # Adds message to queue
         self.queue.append(m)
 
-    def Extract_Message(self):
+    def Extract_Message(self):  # Takes first message in queue if source and destination are not failed
         for m in self.queue:
-            if 'P' in m.src:
-                if self.proposers[m.src].failed == False and self.acceptors[m.dst].failed == False:
-                    self.queue.remove(m)
-                    return m
-            else:
-                if self.acceptors[m.src].failed == False and self.proposers[m.dst].failed == False:
-                    self.queue.remove(m)
-                    return m
+            if self.computers[m.src].failed is False and self.computers[m.dst].failed is False:
+                self.queue.remove(m)
+                return m
         return None
 
 
-def Simulation(n_p, n_a, tmax, E):
-    #   /* Initializeer Proposer and Acceptor sets, maak netwerk aan*/
+def Simulation(n_p, n_a, tmax, E):  # Runs Paxos simulation with given events
+    # Initialise computers and network
     N = Network()
-    A = {'A' + str((i + 1)): Computer('A' + str((i + 1)), N) for i in range(n_a)}
-    P = {'P' + str((i + 1)): Computer('P' + str((i + 1)), N, A) for i in range(n_p)}
-    N.proposers = P
-    N.acceptors = A
-    #     comps = P+A
+    A = {'A' + str((i + 1)): Computer(N) for i in range(n_a)}
+    P = {'P' + str((i + 1)): Computer(N, A.keys()) for i in range(n_p)}
+    C = {**P, **A}
+    N.computers = C
     global proposal
     proposal = 0
 
     for t in range(0, tmax):
-        #         print(len(E))
-        #         print(len(N.queue) == 0 or len(E) == 0)
         if len(N.queue) == 0 and len(E) == 0:
-            #             print('empty')
-            # Als er geen berichten of zijn of events, dan is de simulatie afgelopen.
+            # If there are no messages or events, the simulation ends.
             print()
             for key in P.keys():
                 if P[key].consensus:
                     print('{} heeft wel consensus (voorgesteld: {}, geaccepteerd: {})'.format(key, P[key].initval,
-                                                                                              P[key].maxval))
+                                                                                              P[key].value))
                 else:
                     print('{} heeft geen consensus.'.format(key))
             return
-        # Verwerk event e (als dat tenminste bestaat)
+        # Process event e (if it exists)
         e = [i for i in E if i[0] == t]
         e = None if e == [] else e[0]
         if e is not None:
             E.remove(e)
-            #             print(e)
             (t, F, R, pi_c, pi_v) = e
-            #             print((t, F, R, pi_c, pi_v))
             for c in F:
                 print('{}: ** {} kapot **'.format('%03d' % t, c))
-                if 'P' in c:
-                    P[c].failed = True
-                else:
-                    A[c].failed = True
+                C[c].failed = True
             for c in R:
                 print('{}: ** {} gerepareerd **'.format('%03d' % t, c))
-                if 'P' in c:
-                    P[c].failed = False
-                else:
-                    A[c].failed = False
+                C[c].failed = False
             if pi_v is not None and pi_c is not None:
                 m = Message()
                 m.type = 'PROPOSE'
-                m.src = None  # PROPOSE-bericht beginnen buiten het netwerk.
+                m.src = None  # PROPOSE-message starts outside network.
                 m.dst = pi_c
                 m.value = pi_v
                 print('{}:    -> {}  PROPOSE v={}'.format('%03d' % t, m.dst, m.value))
-                P[pi_c].DeliverMessage(m)
+                C[pi_c].DeliverMessage(m)
         else:
             m = N.Extract_Message()
-            if m is not None:
-                #                 if m.type = 'PROPOSE':
-                #                     print('{}:    -> P{}  PROPOSE v={}'.format(t, m.dst, m.value))
+            if m is not None:  # Messages get printed and delivered based on type
                 if m.type == 'PREPARE':
                     print('{}: {} -> {}  PREPARE n={}'.format('%03d' % t, m.src, m.dst, m.proposalID))
-                    A[m.dst].DeliverMessage(m)
+                    C[m.dst].DeliverMessage(m)
                 elif m.type == 'PROMISE':
-                    if A[m.src].prior:
+                    if C[m.src].prior:
                         print('{}: {} -> {}  PROMISE n={} (Prior: n={}, v={})'.format('%03d' % t, m.src, m.dst,
-                                                                                      m.proposalID, A[m.src].maxID,
-                                                                                      A[m.src].maxval))
+                                                                                      m.proposalID, C[m.src].maxID,
+                                                                                      C[m.src].value))
                     else:
                         print('{}: {} -> {}  PROMISE n={} (Prior: None)'.format('%03d' % t, m.src, m.dst, m.proposalID))
-                    P[m.dst].DeliverMessage(m)
+                    C[m.dst].DeliverMessage(m)
                 elif m.type == 'ACCEPT':
                     print('{}: {} -> {}  ACCEPT n={} v={}'.format('%03d' % t, m.src, m.dst, m.proposalID, m.value))
-                    A[m.dst].DeliverMessage(m)
+                    C[m.dst].DeliverMessage(m)
                 elif m.type == 'ACCEPTED':
                     print('{}: {} -> {}  ACCEPTED n={} v={}'.format('%03d' % t, m.src, m.dst, m.proposalID, m.value))
-                    P[m.dst].DeliverMessage(m)
+                    C[m.dst].DeliverMessage(m)
                 elif m.type == 'REJECTED':
                     print('{}: {} -> {}  REJECTED n={}'.format('%03d' % t, m.src, m.dst, m.proposalID))
-                    P[m.dst].DeliverMessage(m)
-            #                 if m.type in ['PREPARE', 'ACCEPT']:
-            #                     A[m.dst].DeliverMessage(m)
-            #                 else:
-            #                     P[m.dst].DeliverMessage(m)
-            #                 DeliverMessage(m.dst, m)
+                    C[m.dst].DeliverMessage(m)
             else:
                 print('{}:'.format('%03d' % t))
+
+    # Prints consensus if tmax was reached
+    for key in P.keys():
+        if P[key].consensus:
+            print('{} heeft wel consensus (voorgesteld: {}, geaccepteerd: {})'.format(key, P[key].initval,
+                                                                                      P[key].value))
+        else:
+            print('{} heeft geen consensus.'.format(key))
 
 
 
@@ -230,6 +221,10 @@ def main(file):
     Reads the file, splits first line and the rest.
     The first line is being splitted into proposers, acceptors and the maximum ticks
     The rest is being used in a for loop where each line is a executeLine.
+    After that the executeLine will go through multiple if statements to determine the line.
+    Then the event will be saved in E and after all lines are implemented in E, it will be used
+    in Simulation(n_p, n_a, tmax, E).
+    The order of the functions are: main -> Simulation ->
 
     :param file: the text file with commands
     """
